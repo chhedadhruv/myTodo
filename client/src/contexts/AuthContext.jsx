@@ -105,6 +105,50 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
   };
 
+  const forgotPassword = async (email) => {
+    try {
+      const response = await axios.post('http://localhost:3001/api/auth/forgot-password', {
+        email
+      });
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Password reset request failed'
+      };
+    }
+  };
+
+  const resetPassword = async (token, password) => {
+    try {
+      const response = await axios.post('http://localhost:3001/api/auth/reset-password', {
+        token,
+        password
+      });
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Password reset failed'
+      };
+    }
+  };
+
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      const response = await axios.post('http://localhost:3001/api/auth/change-password', {
+        currentPassword,
+        newPassword
+      });
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Password change failed'
+      };
+    }
+  };
+
   const value = {
     user,
     token,
@@ -112,6 +156,9 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    forgotPassword,
+    resetPassword,
+    changePassword,
     isAuthenticated: !!user
   };
 

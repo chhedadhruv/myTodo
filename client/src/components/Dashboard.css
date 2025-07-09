@@ -888,3 +888,88 @@ html {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
+
+/* Password Form Styles */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  padding-right: 48px;
+}
+
+.password-input-wrapper .password-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-input-wrapper .password-toggle:hover {
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+}
+
+.password-requirements {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: 4px 0 0 0;
+  line-height: 1.4;
+}
+
+/* Message Styles */
+.messages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.error-message {
+  background: var(--error-bg, #fee2e2);
+  color: var(--error-text, #dc2626);
+  border: 1px solid var(--error-border, #fca5a5);
+}
+
+.success-message {
+  background: var(--success-bg, #dcfce7);
+  color: var(--success-text, #16a34a);
+  border: 1px solid var(--success-border, #86efac);
+}
+
+/* Responsive adjustments for password form */
+@media (max-width: 480px) {
+  .password-input-wrapper .password-toggle {
+    right: 10px;
+    padding: 3px;
+  }
+  
+  .password-requirements {
+    font-size: 11px;
+  }
+  
+  .message {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}

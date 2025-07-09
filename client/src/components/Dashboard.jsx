@@ -18,12 +18,15 @@ import {
   Check,
   Clock,
   AlertCircle,
-  Loader
+  Loader,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, changePassword } = useAuth();
   const { theme, toggleTheme, isDark } = useTheme();
   
   const [tasks, setTasks] = useState([]);
@@ -33,14 +36,27 @@ const Dashboard = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+  const [passwordChangeError, setPasswordChangeError] = useState('');
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
     priority: 'medium',
     due_date: ''
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
 
   // API utility functions
@@ -227,9 +243,51 @@ const Dashboard = () => {
   const closeModals = () => {
     setShowAddModal(false);
     setShowEditModal(false);
+    setShowChangePasswordModal(false);
     setEditingTask(null);
     setTaskForm({ title: '', description: '', priority: 'medium', due_date: '' });
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setPasswordChangeError('');
+    setPasswordChangeSuccess('');
     setError(null);
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordChangeLoading(true);
+    setPasswordChangeError('');
+    setPasswordChangeSuccess('');
+
+    // Validate passwords match
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordChangeError('New passwords do not match');
+      setPasswordChangeLoading(false);
+      return;
+    }
+
+    try {
+      const result = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      if (result.success) {
+        setPasswordChangeSuccess(result.message);
+        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          setShowChangePasswordModal(false);
+          setPasswordChangeSuccess('');
+        }, 2000);
+      } else {
+        setPasswordChangeError(result.error);
+      }
+    } catch (error) {
+      setPasswordChangeError('Something went wrong. Please try again.');
+    } finally {
+      setPasswordChangeLoading(false);
+    }
+  };
+
+  const openChangePasswordModal = () => {
+    setShowProfileDropdown(false);
+    setShowChangePasswordModal(true);
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -328,6 +386,10 @@ const Dashboard = () => {
 
             {showProfileDropdown && (
               <div className="dropdown-menu">
+                <div className="dropdown-item" onClick={openChangePasswordModal}>
+                  <Lock size={16} />
+                  <span>Change Password</span>
+                </div>
                 <div className="dropdown-item" onClick={logout}>
                   <LogOut size={16} />
                   <span>Logout</span>
@@ -615,6 +677,131 @@ const Dashboard = () => {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <div className="modal-overlay" onClick={closeModals}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Change Password</h2>
+              <button className="modal-close" onClick={closeModals}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handlePasswordChange}>
+              <div className="modal-body">
+                {/* Messages */}
+                {(passwordChangeError || passwordChangeSuccess) && (
+                  <div className="messages-container">
+                    {passwordChangeError && (
+                      <div className="message error-message">
+                        <AlertCircle size={16} />
+                        {passwordChangeError}
+                      </div>
+                    )}
+                    {passwordChangeSuccess && (
+                      <div className="message success-message">
+                        <CheckCircle size={16} />
+                        {passwordChangeSuccess}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="dashboard-form-group">
+                  <label>Current Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      placeholder="Enter your current password"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    >
+                      {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="dashboard-form-group">
+                  <label>New Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      placeholder="Enter your new password"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                      required
+                      minLength={6}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                  <p className="password-requirements">
+                    Password must be at least 6 characters long and contain uppercase, lowercase, and numbers.
+                  </p>
+                </div>
+
+                <div className="dashboard-form-group">
+                  <label>Confirm New Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Confirm your new password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn-secondary" 
+                  onClick={closeModals} 
+                  disabled={passwordChangeLoading}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-primary" 
+                  disabled={passwordChangeLoading || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}
+                >
+                  {passwordChangeLoading ? (
+                    <>
+                      <Loader size={16} className="spinner" />
+                      Changing...
+                    </>
+                  ) : (
+                    'Change Password'
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

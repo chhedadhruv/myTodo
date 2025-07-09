@@ -18,6 +18,17 @@ const createTables = async () => {
       );
     `);
 
+    // Add reset password columns if they don't exist
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255);
+    `);
+
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP;
+    `);
+
     // Create tasks table
     await client.query(`
       CREATE TABLE IF NOT EXISTS tasks (

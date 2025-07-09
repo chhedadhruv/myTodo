@@ -509,4 +509,61 @@
   .input-validation {
     right: 10px;
   }
+}
+
+/* Back Button Styles */
+.back-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+  align-self: flex-start;
+}
+
+.back-button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Forgot Password Link Styles */
+.forgot-password-link {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  text-align: right;
+  transition: all 0.2s ease;
+  padding: 4px 0;
+  margin-top: 4px;
+  align-self: flex-end;
+}
+
+.forgot-password-link:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+/* Responsive adjustments for new elements */
+@media (max-width: 480px) {
+  .back-button {
+    font-size: 13px;
+    padding: 6px 8px;
+    margin-bottom: 12px;
+  }
+  
+  .forgot-password-link {
+    font-size: 13px;
+  }
 } 
