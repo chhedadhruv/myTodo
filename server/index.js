@@ -25,7 +25,11 @@ app.use('/api/', limiter);
 
 // CORS
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173', // Vite client
+    'http://10.0.2.2:3001',  // Android emulator
+    'http://localhost:3001', // iOS simulator
+  ],
   credentials: true,
 }));
 
