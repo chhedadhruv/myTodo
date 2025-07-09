@@ -38,7 +38,9 @@ import {
   Clock,
   AlertCircle,
   Loader,
+  Lock,
 } from './Icons';
+import ChangePassword from './ChangePassword';
 
 interface Task {
   id: string;
@@ -198,6 +200,8 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -414,6 +418,27 @@ const Dashboard: React.FC = () => {
     });
   };
 
+  const handleProfileMenuToggle = () => {
+    setShowProfileMenu(!showProfileMenu);
+  };
+
+  const handleChangePassword = () => {
+    setShowProfileMenu(false);
+    setShowChangePasswordModal(true);
+  };
+
+  const handleLogout = () => {
+    setShowProfileMenu(false);
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', style: 'destructive', onPress: logout },
+      ]
+    );
+  };
+
   const openDatePicker = (mode: 'add' | 'edit') => {
     setDatePickerFor(mode);
     setSelectedDate(taskForm.due_date ? new Date(taskForm.due_date) : new Date());
@@ -573,6 +598,45 @@ const Dashboard: React.FC = () => {
       fontSize: 14,
       fontWeight: '500',
       color: colors.text.primary,
+    },
+    profileMenuContainer: {
+      position: 'relative',
+    },
+    profileMenu: {
+      position: 'absolute',
+      top: '100%',
+      right: 0,
+      backgroundColor: 'rgba(0, 0, 0, 1)',
+      borderColor: colors.border.primary,
+      borderWidth: 1,
+      borderRadius: 8,
+      shadowColor: colors.shadow.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 4,
+      zIndex: 1000,
+      minWidth: 160,
+      marginTop: 8,
+    },
+    profileMenuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      gap: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border.primary,
+    },
+    profileMenuItemLast: {
+      borderBottomWidth: 0,
+    },
+    profileMenuItemText: {
+      fontSize: 14,
+      color: colors.text.primary,
+      fontWeight: '500',
+    },
+    profileMenuItemLogout: {
+      color: colors.status.error.text,
     },
     errorBanner: {
       backgroundColor: colors.status.error.bg,
@@ -900,13 +964,34 @@ const Dashboard: React.FC = () => {
                 <Moon size={20} color={colors.text.secondary} />
               )}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.profileButton} onPress={logout}>
-              <View style={styles.profileInfo}>
-                <Text style={styles.profileGreeting}>Signed in as</Text>
-                <Text style={styles.profileName}>{user?.username}</Text>
-              </View>
-              <LogOut size={16} color={colors.text.secondary} />
-            </TouchableOpacity>
+            <View style={styles.profileMenuContainer}>
+              <TouchableOpacity style={styles.profileButton} onPress={handleProfileMenuToggle}>
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileGreeting}>Signed in as</Text>
+                  <Text style={styles.profileName}>{user?.username}</Text>
+                </View>
+                <ChevronDown size={16} color={colors.text.secondary} />
+              </TouchableOpacity>
+              
+              {showProfileMenu && (
+                <View style={styles.profileMenu}>
+                  <TouchableOpacity 
+                    style={styles.profileMenuItem}
+                    onPress={handleChangePassword}
+                  >
+                    <Lock size={16} color={colors.text.secondary} />
+                    <Text style={styles.profileMenuItemText}>Change Password</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.profileMenuItem, styles.profileMenuItemLast]}
+                    onPress={handleLogout}
+                  >
+                    <LogOut size={16} color={colors.status.error.text} />
+                    <Text style={[styles.profileMenuItemText, styles.profileMenuItemLogout]}>Logout</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           </View>
         </View>
 
@@ -1240,6 +1325,16 @@ const Dashboard: React.FC = () => {
           onCancel={() => {
             setShowDatePicker(false);
             setDatePickerFor(null);
+          }}
+        />
+
+        {/* Change Password Modal */}
+        <ChangePassword
+          visible={showChangePasswordModal}
+          onClose={() => setShowChangePasswordModal(false)}
+          onSuccess={() => {
+            Alert.alert('Success', 'Password changed successfully!');
+            setShowChangePasswordModal(false);
           }}
         />
       </View>

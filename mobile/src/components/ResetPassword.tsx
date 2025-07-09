@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -15,72 +14,75 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import {
-  Eye,
-  EyeOff,
-  Mail,
   Lock,
-  User,
   CheckCircle,
   AlertCircle,
+  ArrowLeft,
   Moon,
   Sun,
-  Check,
+  Eye,
+  EyeOff,
 } from './Icons';
-import ForgotPassword from './ForgotPassword';
 
-type ViewMode = 'login' | 'register' | 'forgot-password';
+interface ResetPasswordProps {
+  token: string;
+  onBackToLogin: () => void;
+  onResetSuccess: () => void;
+}
 
-const Auth: React.FC = () => {
-  const [viewMode, setViewMode] = useState<ViewMode>('login');
+const ResetPassword: React.FC<ResetPasswordProps> = ({ 
+  token, 
+  onBackToLogin, 
+  onResetSuccess 
+}) => {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-
-  const { login, register } = useAuth();
+  const { resetPassword } = useAuth();
   const { toggleTheme, isDark, colors } = useTheme();
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData({
-      ...formData,
-      [field]: value,
-    });
-    // Clear error when user starts typing
-    if (error) setError('');
-  };
-
   const handleSubmit = async () => {
-    setLoading(true);
     setError('');
     setSuccess('');
 
-    // Validate passwords match for registration
-    if (viewMode === 'register' && formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
+    // Validation
+    if (!password.trim()) {
+      setError('Please enter a new password');
       return;
     }
 
-    try {
-      let result;
-      if (viewMode === 'login') {
-        result = await login(formData.email, formData.password);
-      } else {
-        result = await register(formData.username, formData.email, formData.password);
-      }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
 
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      setError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await resetPassword(token, password);
+      
       if (result.success) {
-        setSuccess(viewMode === 'login' ? 'Login successful!' : 'Registration successful!');
+        setSuccess('Password has been successfully reset. You can now login with your new password.');
+        setTimeout(() => {
+          onResetSuccess();
+        }, 2000);
       } else {
-        setError(result.error || 'Something went wrong');
+        setError(result.error || 'Failed to reset password');
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');
@@ -89,33 +91,15 @@ const Auth: React.FC = () => {
     }
   };
 
-  const toggleMode = () => {
-    setViewMode(viewMode === 'login' ? 'register' : 'login');
-    setError('');
-    setSuccess('');
-    setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (error) setError('');
   };
 
-  const handleForgotPassword = () => {
-    setViewMode('forgot-password');
-    setError('');
-    setSuccess('');
+  const handleConfirmPasswordChange = (value: string) => {
+    setConfirmPassword(value);
+    if (error) setError('');
   };
-
-  const handleBackToLogin = () => {
-    setViewMode('login');
-    setError('');
-    setSuccess('');
-    setFormData({ username: '', email: '', password: '', confirmPassword: '' });
-  };
-
-  // If in forgot password mode, show the ForgotPassword component
-  if (viewMode === 'forgot-password') {
-    return <ForgotPassword onBackToLogin={handleBackToLogin} />;
-  }
-
-  const isLogin = viewMode === 'login';
-  const isEmailValid = formData.email && formData.email.includes('@');
 
   const styles = StyleSheet.create({
     container: {
@@ -126,6 +110,20 @@ const Auth: React.FC = () => {
       position: 'absolute',
       top: Platform.OS === 'ios' ? 60 : 40,
       right: 24,
+      backgroundColor: colors.bg.secondary,
+      borderColor: colors.border.primary,
+      borderWidth: 1,
+      borderRadius: 22,
+      width: 44,
+      height: 44,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 100,
+    },
+    backButton: {
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? 60 : 40,
+      left: 24,
       backgroundColor: colors.bg.secondary,
       borderColor: colors.border.primary,
       borderWidth: 1,
@@ -215,11 +213,6 @@ const Auth: React.FC = () => {
       borderColor: colors.accent.primary,
       borderWidth: 2,
     },
-    inputValidation: {
-      position: 'absolute',
-      right: 16,
-      zIndex: 2,
-    },
     passwordToggle: {
       position: 'absolute',
       right: 16,
@@ -253,15 +246,6 @@ const Auth: React.FC = () => {
     successMessageText: {
       color: colors.status.success.text,
     },
-    forgotPasswordContainer: {
-      alignItems: 'flex-end',
-      marginTop: 8,
-    },
-    forgotPasswordLink: {
-      color: colors.accent.primary,
-      fontSize: 14,
-      fontWeight: '500',
-    },
     submitButton: {
       backgroundColor: colors.accent.primary,
       paddingVertical: 14,
@@ -279,21 +263,58 @@ const Auth: React.FC = () => {
       fontSize: 16,
       fontWeight: '600',
     },
-    switchContainer: {
+    backToLoginContainer: {
       alignItems: 'center',
       marginTop: 24,
     },
-    switchText: {
+    backToLoginText: {
       color: colors.text.secondary,
       fontSize: 14,
       marginBottom: 8,
     },
-    switchLink: {
+    backToLoginLink: {
       color: colors.accent.primary,
       fontSize: 14,
       fontWeight: '600',
     },
+    passwordStrength: {
+      marginTop: 8,
+    },
+    strengthText: {
+      fontSize: 12,
+      color: colors.text.secondary,
+      marginBottom: 4,
+    },
+    strengthRequirement: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 2,
+    },
+    strengthCheck: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: colors.status.success.text,
+    },
+    strengthCross: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: colors.status.error.text,
+    },
+    strengthRequirementText: {
+      fontSize: 12,
+      color: colors.text.tertiary,
+    },
   });
+
+  const passwordRequirements = [
+    { text: 'At least 6 characters', met: password.length >= 6 },
+    { text: 'One uppercase letter', met: /[A-Z]/.test(password) },
+    { text: 'One lowercase letter', met: /[a-z]/.test(password) },
+    { text: 'One number', met: /\d/.test(password) },
+  ];
 
   return (
     <KeyboardAvoidingView
@@ -305,6 +326,10 @@ const Auth: React.FC = () => {
         backgroundColor={colors.bg.primary}
       />
       
+      <TouchableOpacity style={styles.backButton} onPress={onBackToLogin}>
+        <ArrowLeft size={20} color={colors.text.secondary} />
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.themeToggle} onPress={toggleTheme}>
         {isDark ? <Sun size={20} color={colors.text.secondary} /> : <Moon size={20} color={colors.text.secondary} />}
       </TouchableOpacity>
@@ -317,15 +342,11 @@ const Auth: React.FC = () => {
         <View style={styles.card}>
           <View style={styles.header}>
             <View style={styles.icon}>
-              <CheckCircle size={32} color="#ffffff" />
+              <Lock size={32} color="#ffffff" />
             </View>
-            <Text style={styles.title}>
-              {isLogin ? 'Welcome back' : 'Create your account'}
-            </Text>
+            <Text style={styles.title}>Reset your password</Text>
             <Text style={styles.subtitle}>
-              {isLogin
-                ? 'Sign in to MyTodo to continue'
-                : 'Join MyTodo and start organizing your tasks'}
+              Enter your new password below
             </Text>
           </View>
 
@@ -352,60 +373,18 @@ const Auth: React.FC = () => {
               </View>
             )}
 
-            {!isLogin && (
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Username</Text>
-                <View style={styles.inputWrapper}>
-                  <View style={styles.inputIcon}>
-                    <User size={20} color={colors.text.tertiary} />
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Choose a username"
-                    placeholderTextColor={colors.text.tertiary}
-                    value={formData.username}
-                    onChangeText={(value) => handleInputChange('username', value)}
-                    autoCapitalize="none"
-                  />
-                </View>
-              </View>
-            )}
-
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Email address</Text>
-              <View style={styles.inputWrapper}>
-                <View style={styles.inputIcon}>
-                  <Mail size={20} color={colors.text.tertiary} />
-                </View>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your email"
-                  placeholderTextColor={colors.text.tertiary}
-                  value={formData.email}
-                  onChangeText={(value) => handleInputChange('email', value)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-                {isEmailValid && (
-                  <View style={styles.inputValidation}>
-                    <Check size={20} color={colors.status.success.text} />
-                  </View>
-                )}
-              </View>
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>New Password</Text>
               <View style={styles.inputWrapper}>
                 <View style={styles.inputIcon}>
                   <Lock size={20} color={colors.text.tertiary} />
                 </View>
                 <TextInput
                   style={styles.input}
-                  placeholder={isLogin ? 'Enter your password' : 'Create a password'}
+                  placeholder="Enter your new password"
                   placeholderTextColor={colors.text.tertiary}
-                  value={formData.password}
-                  onChangeText={(value) => handleInputChange('password', value)}
+                  value={password}
+                  onChangeText={handlePasswordChange}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                 />
@@ -421,46 +400,46 @@ const Auth: React.FC = () => {
                 </TouchableOpacity>
               </View>
               
-              {isLogin && (
-                <View style={styles.forgotPasswordContainer}>
-                  <TouchableOpacity onPress={handleForgotPassword}>
-                    <Text style={styles.forgotPasswordLink}>
-                      Forgot password?
-                    </Text>
-                  </TouchableOpacity>
+              {password && (
+                <View style={styles.passwordStrength}>
+                  <Text style={styles.strengthText}>Password requirements:</Text>
+                  {passwordRequirements.map((req, index) => (
+                    <View key={index} style={styles.strengthRequirement}>
+                      <View style={req.met ? styles.strengthCheck : styles.strengthCross} />
+                      <Text style={styles.strengthRequirementText}>{req.text}</Text>
+                    </View>
+                  ))}
                 </View>
               )}
             </View>
 
-            {!isLogin && (
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Confirm Password</Text>
-                <View style={styles.inputWrapper}>
-                  <View style={styles.inputIcon}>
-                    <Lock size={20} color={colors.text.tertiary} />
-                  </View>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirm your password"
-                    placeholderTextColor={colors.text.tertiary}
-                    value={formData.confirmPassword}
-                    onChangeText={(value) => handleInputChange('confirmPassword', value)}
-                    secureTextEntry={!showConfirmPassword}
-                    autoCapitalize="none"
-                  />
-                  <TouchableOpacity
-                    style={styles.passwordToggle}
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff size={20} color={colors.text.tertiary} />
-                    ) : (
-                      <Eye size={20} color={colors.text.tertiary} />
-                    )}
-                  </TouchableOpacity>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={styles.inputWrapper}>
+                <View style={styles.inputIcon}>
+                  <Lock size={20} color={colors.text.tertiary} />
                 </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm your new password"
+                  placeholderTextColor={colors.text.tertiary}
+                  value={confirmPassword}
+                  onChangeText={handleConfirmPasswordChange}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={styles.passwordToggle}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} color={colors.text.tertiary} />
+                  ) : (
+                    <Eye size={20} color={colors.text.tertiary} />
+                  )}
+                </TouchableOpacity>
               </View>
-            )}
+            </View>
 
             <TouchableOpacity
               style={[styles.submitButton, loading && styles.submitButtonDisabled]}
@@ -471,21 +450,21 @@ const Auth: React.FC = () => {
                 <ActivityIndicator color="#ffffff" size="small" />
               ) : (
                 <Text style={styles.submitButtonText}>
-                  {isLogin ? 'Sign In' : 'Create Account'}
+                  Reset Password
                 </Text>
               )}
             </TouchableOpacity>
+          </View>
 
-            <View style={styles.switchContainer}>
-              <Text style={styles.switchText}>
-                {isLogin ? "Don't have an account?" : 'Already have an account?'}
+          <View style={styles.backToLoginContainer}>
+            <Text style={styles.backToLoginText}>
+              Remember your password?
+            </Text>
+            <TouchableOpacity onPress={onBackToLogin}>
+              <Text style={styles.backToLoginLink}>
+                Back to sign in
               </Text>
-              <TouchableOpacity onPress={toggleMode}>
-                <Text style={styles.switchLink}>
-                  {isLogin ? 'Sign up' : 'Sign in'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -493,4 +472,4 @@ const Auth: React.FC = () => {
   );
 };
 
-export default Auth; 
+export default ResetPassword; 

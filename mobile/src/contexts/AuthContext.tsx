@@ -17,6 +17,9 @@ interface AuthContextType {
   register: (username: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
+  forgotPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  resetPassword: (token: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -143,6 +146,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setToken(null);
   };
 
+  const forgotPassword = async (email: string) => {
+    try {
+      console.log('Attempting forgot password to:', `${BASE_URL}/api/auth/forgot-password`);
+      const response = await axios.post(`${BASE_URL}/api/auth/forgot-password`, { email });
+      return { success: true };
+    } catch (error: any) {
+      console.error('Forgot password error:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Forgot password failed',
+      };
+    }
+  };
+
+  const resetPassword = async (token: string, password: string) => {
+    try {
+      console.log('Attempting reset password to:', `${BASE_URL}/api/auth/reset-password`);
+      const response = await axios.post(`${BASE_URL}/api/auth/reset-password`, { token, password });
+      return { success: true };
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Reset password failed',
+      };
+    }
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      console.log('Attempting change password to:', `${BASE_URL}/api/auth/change-password`);
+      const response = await axios.post(`${BASE_URL}/api/auth/change-password`, { currentPassword, newPassword });
+      return { success: true };
+    } catch (error: any) {
+      console.error('Change password error:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Change password failed',
+      };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -151,6 +196,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     isAuthenticated: !!user,
+    forgotPassword,
+    resetPassword,
+    changePassword,
   };
 
   return (
