@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { Platform } from 'react-native';
 
 interface User {
   id: string;
@@ -24,16 +23,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Configure base URL for different platforms
-const getBaseURL = () => {
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:3001'; // Android emulator
-  } else {
-    return 'http://localhost:3001'; // iOS simulator
-  }
-};
-
-const BASE_URL = getBaseURL();
+// Configure base URL for production API
+const BASE_URL = 'https://mytodo-api.dhruvchheda.com';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

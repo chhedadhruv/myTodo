@@ -216,16 +216,8 @@ const Dashboard: React.FC = () => {
     due_date: '',
   });
 
-  // Configure base URL for different platforms
-  const getBaseURL = () => {
-    if (Platform.OS === 'android') {
-      return 'http://10.0.2.2:3001'; // Android emulator
-    } else {
-      return 'http://localhost:3001'; // iOS simulator
-    }
-  };
-
-  const API_BASE_URL = `${getBaseURL()}/api`;
+  // Configure base URL for production API
+  const API_BASE_URL = 'https://mytodo-api.dhruvchheda.com/api';
 
   const apiRequest = async (endpoint: string, options: any = {}) => {
     const token = await AsyncStorage.getItem('token');

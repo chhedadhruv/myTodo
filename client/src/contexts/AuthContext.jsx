@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
       if (storedToken) {
         try {
           axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-          const response = await axios.get('http://localhost:3001/api/auth/me');
+          const response = await axios.get('https://mytodo-api.dhruvchheda.com/api/auth/me');
           setUser(response.data.user);
           setToken(storedToken);
         } catch (error) {
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/login', {
+      const response = await axios.post('https://mytodo-api.dhruvchheda.com/api/auth/login', {
         email,
         password
       });
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, email, password) => {
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/register', {
+      const response = await axios.post('https://mytodo-api.dhruvchheda.com/api/auth/register', {
         username,
         email,
         password
@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }) => {
 
   const forgotPassword = async (email) => {
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/forgot-password', {
+      const response = await axios.post('https://mytodo-api.dhruvchheda.com/api/auth/forgot-password', {
         email
       });
       return { success: true, message: response.data.message };
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }) => {
 
   const resetPassword = async (token, password) => {
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/reset-password', {
+      const response = await axios.post('https://mytodo-api.dhruvchheda.com/api/auth/reset-password', {
         token,
         password
       });
@@ -136,7 +136,7 @@ export const AuthProvider = ({ children }) => {
 
   const changePassword = async (currentPassword, newPassword) => {
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/change-password', {
+      const response = await axios.post('https://mytodo-api.dhruvchheda.com/api/auth/change-password', {
         currentPassword,
         newPassword
       });
