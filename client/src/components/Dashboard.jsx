@@ -21,12 +21,13 @@ import {
   Loader,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  UserMinus
 } from 'lucide-react';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { user, logout, changePassword } = useAuth();
+  const { user, logout, changePassword, deleteAccount } = useAuth();
   const { theme, toggleTheme, isDark } = useTheme();
   
   const [tasks, setTasks] = useState([]);
@@ -37,6 +38,7 @@ const Dashboard = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
@@ -45,6 +47,12 @@ const Dashboard = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState('');
+  const [deleteAccountSuccess, setDeleteAccountSuccess] = useState('');
+  const [deleteAccountPassword, setDeleteAccountPassword] = useState('');
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   
   const [taskForm, setTaskForm] = useState({
     title: '',
@@ -244,11 +252,16 @@ const Dashboard = () => {
     setShowAddModal(false);
     setShowEditModal(false);
     setShowChangePasswordModal(false);
+    setShowDeleteAccountModal(false);
     setEditingTask(null);
     setTaskForm({ title: '', description: '', priority: 'medium', due_date: '' });
     setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     setPasswordChangeError('');
     setPasswordChangeSuccess('');
+    setDeleteAccountError('');
+    setDeleteAccountSuccess('');
+    setDeleteAccountPassword('');
+    setDeleteConfirmText('');
     setError(null);
   };
 
@@ -288,6 +301,42 @@ const Dashboard = () => {
   const openChangePasswordModal = () => {
     setShowProfileDropdown(false);
     setShowChangePasswordModal(true);
+  };
+
+  const handleDeleteAccount = async (e) => {
+    e.preventDefault();
+    setDeleteAccountLoading(true);
+    setDeleteAccountError('');
+    setDeleteAccountSuccess('');
+
+    // Validate confirmation text
+    if (deleteConfirmText !== 'DELETE') {
+      setDeleteAccountError('Please type "DELETE" to confirm account deletion');
+      setDeleteAccountLoading(false);
+      return;
+    }
+
+    try {
+      const result = await deleteAccount(deleteAccountPassword);
+      if (result.success) {
+        setDeleteAccountSuccess(result.message);
+        // User will be automatically logged out after successful deletion
+        setTimeout(() => {
+          setShowDeleteAccountModal(false);
+        }, 2000);
+      } else {
+        setDeleteAccountError(result.error);
+      }
+    } catch (error) {
+      setDeleteAccountError('Something went wrong. Please try again.');
+    } finally {
+      setDeleteAccountLoading(false);
+    }
+  };
+
+  const openDeleteAccountModal = () => {
+    setShowProfileDropdown(false);
+    setShowDeleteAccountModal(true);
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -389,6 +438,10 @@ const Dashboard = () => {
                 <div className="dropdown-item" onClick={openChangePasswordModal}>
                   <Lock size={16} />
                   <span>Change Password</span>
+                </div>
+                <div className="dropdown-item danger" onClick={openDeleteAccountModal}>
+                  <UserMinus size={16} />
+                  <span>Delete Account</span>
                 </div>
                 <div className="dropdown-item" onClick={logout}>
                   <LogOut size={16} />
@@ -798,6 +851,106 @@ const Dashboard = () => {
                     </>
                   ) : (
                     'Change Password'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Modal */}
+      {showDeleteAccountModal && (
+        <div className="modal-overlay" onClick={closeModals}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Delete Account</h2>
+              <button className="modal-close" onClick={closeModals}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleDeleteAccount}>
+              <div className="modal-body">
+                <div className="warning-message">
+                  <AlertCircle size={20} />
+                  <div>
+                    <h3>Are you sure you want to delete your account?</h3>
+                    <p>This action cannot be undone. All your tasks and data will be permanently deleted.</p>
+                  </div>
+                </div>
+
+                {/* Messages */}
+                {(deleteAccountError || deleteAccountSuccess) && (
+                  <div className="messages-container">
+                    {deleteAccountError && (
+                      <div className="message error-message">
+                        <AlertCircle size={16} />
+                        {deleteAccountError}
+                      </div>
+                    )}
+                    {deleteAccountSuccess && (
+                      <div className="message success-message">
+                        <CheckCircle size={16} />
+                        {deleteAccountSuccess}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="dashboard-form-group">
+                  <label>Current Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showDeletePassword ? 'text' : 'password'}
+                      placeholder="Enter your current password"
+                      value={deleteAccountPassword}
+                      onChange={(e) => setDeleteAccountPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowDeletePassword(!showDeletePassword)}
+                    >
+                      {showDeletePassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="dashboard-form-group">
+                  <label>Type "DELETE" to confirm</label>
+                  <input
+                    type="text"
+                    placeholder="DELETE"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn-secondary" 
+                  onClick={closeModals} 
+                  disabled={deleteAccountLoading}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-danger" 
+                  disabled={deleteAccountLoading || !deleteAccountPassword || deleteConfirmText !== 'DELETE'}
+                >
+                  {deleteAccountLoading ? (
+                    <>
+                      <Loader size={16} className="spinner" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete Account'
                   )}
                 </button>
               </div>

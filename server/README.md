@@ -43,7 +43,9 @@
 
 - JWT-based authentication with access and refresh tokens
 - Secure password hashing with bcrypt (12 salt rounds)
+- Email verification system with dual verification methods (link + OTP)
 - Email-based password reset functionality
+- Secure account deletion with confirmation
 - Rate limiting (100 requests per 15 minutes per IP)
 - CORS protection with configurable origins
 - Comprehensive input validation and sanitization
@@ -165,11 +167,15 @@ JWT_EXPIRES_IN=24h
 JWT_REFRESH_SECRET=your-refresh-secret-change-this-in-production-minimum-32-characters
 JWT_REFRESH_EXPIRES_IN=7d
 
-# Email Configuration (for password reset)
+# Email Configuration (for password reset and email verification)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
+SMTP_FROM=noreply@mytodo.com
+
+# Client URL (for email verification links)
+CLIENT_URL=http://localhost:5173
 
 # CORS Configuration
 CORS_ORIGIN=http://localhost:3000,http://localhost:5173
@@ -187,6 +193,36 @@ LOG_FILE=./logs/app.log
 </details>
 
 > **⚠️ Security Note:** Always use strong, unique secrets in production and never commit `.env` files to version control!
+
+---
+
+## 📧 Email Verification Setup
+
+### 🔧 Gmail Configuration
+
+If you're using Gmail for sending emails, you'll need to set up an App Password:
+
+1. **Enable 2-Factor Authentication** on your Google account
+2. Go to **Google Account Settings** > **Security** > **App passwords**
+3. Generate an app password for "Mail"
+4. Use this app password in `SMTP_PASS` (not your regular Gmail password)
+
+### 🚀 Email Features
+
+- **Registration Flow**: New users receive verification emails with both link and OTP options
+- **Login Protection**: Unverified users cannot log in until email is verified
+- **Dual Verification**: Users can verify via email link OR 6-digit OTP code
+- **Account Deletion**: Secure deletion with email confirmation
+
+### 📋 For Existing Users
+
+If you have existing users in your database:
+1. All existing users will have `email_verified = FALSE` after running migrations
+2. These users will need to verify their emails to log in
+3. You can manually verify trusted users:
+   ```sql
+   UPDATE users SET email_verified = TRUE WHERE email = 'trusted@example.com';
+   ```
 
 ---
 
@@ -216,15 +252,15 @@ Content-Type: application/json
 **Response:**
 ```json
 {
-  "message": "User created successfully",
+  "message": "User created successfully. Please check your email to verify your account.",
   "user": {
     "id": 1,
     "username": "john_doe",
     "email": "john@example.com",
-    "createdAt": "2024-01-01T00:00:00.000Z"
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "emailVerified": false
   },
-  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+  "requiresVerification": true
 }
 ```
 
@@ -250,10 +286,20 @@ Content-Type: application/json
   "user": {
     "id": 1,
     "username": "john_doe",
-    "email": "john@example.com"
+    "email": "john@example.com",
+    "emailVerified": true
   },
   "accessToken": "eyJhbGciOiJIUzI1NiIs...",
   "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+**Error Response (Unverified Email):**
+```json
+{
+  "error": "Email not verified. Please verify your email before logging in.",
+  "requiresVerification": true,
+  "email": "john@example.com"
 }
 ```
 
@@ -292,6 +338,109 @@ Content-Type: application/json
 
 {
   "email": "john@example.com"
+}
+```
+
+</details>
+
+<details>
+<summary><strong>POST</strong> <code>/api/auth/verify-email</code> - Verify email with token</summary>
+
+```http
+POST /api/auth/verify-email
+Content-Type: application/json
+
+{
+  "token": "verification_token_from_email"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Email verified successfully! You can now use all features of MyTodo.",
+  "user": {
+    "id": 1,
+    "username": "john_doe",
+    "email": "john@example.com",
+    "emailVerified": true
+  },
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+</details>
+
+<details>
+<summary><strong>POST</strong> <code>/api/auth/verify-otp</code> - Verify email with OTP</summary>
+
+```http
+POST /api/auth/verify-otp
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "otp": "123456"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Email verified successfully! You can now use all features of MyTodo.",
+  "user": {
+    "id": 1,
+    "username": "john_doe",
+    "email": "john@example.com",
+    "emailVerified": true
+  },
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+</details>
+
+<details>
+<summary><strong>POST</strong> <code>/api/auth/resend-verification</code> - Resend verification email</summary>
+
+```http
+POST /api/auth/resend-verification
+Content-Type: application/json
+
+{
+  "email": "john@example.com"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Verification email sent successfully. Please check your email."
+}
+```
+
+</details>
+
+<details>
+<summary><strong>DELETE</strong> <code>/api/auth/delete-account</code> - Delete user account</summary>
+
+```http
+DELETE /api/auth/delete-account
+Content-Type: application/json
+Authorization: Bearer <access_token>
+
+{
+  "password": "SecurePass123",
+  "confirmDelete": "DELETE"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Account deleted successfully. We're sorry to see you go!"
 }
 ```
 

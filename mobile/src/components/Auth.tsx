@@ -27,8 +27,9 @@ import {
   Check,
 } from './Icons';
 import ForgotPassword from './ForgotPassword';
+import EmailVerification from './EmailVerification';
 
-type ViewMode = 'login' | 'register' | 'forgot-password';
+type ViewMode = 'login' | 'register' | 'forgot-password' | 'verify-email';
 
 const Auth: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('login');
@@ -37,6 +38,7 @@ const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [verificationEmail, setVerificationEmail] = useState('');
 
   const [formData, setFormData] = useState({
     username: '',
@@ -78,9 +80,23 @@ const Auth: React.FC = () => {
       }
 
       if (result.success) {
-        setSuccess(viewMode === 'login' ? 'Login successful!' : 'Registration successful!');
+        if (result.requiresVerification) {
+          // Show verification screen
+          setVerificationEmail(result.email || formData.email);
+          setViewMode('verify-email');
+          setSuccess(result.message || 'Please check your email for the verification code.');
+        } else {
+          setSuccess(viewMode === 'login' ? 'Login successful!' : 'Registration successful!');
+        }
       } else {
-        setError(result.error || 'Something went wrong');
+        if (result.requiresVerification) {
+          // User needs to verify email
+          setVerificationEmail(result.email || formData.email);
+          setViewMode('verify-email');
+          setError(result.error || 'Please verify your email address.');
+        } else {
+          setError(result.error || 'Something went wrong');
+        }
       }
     } catch (err) {
       setError('Something went wrong. Please try again.');
@@ -93,6 +109,7 @@ const Auth: React.FC = () => {
     setViewMode(viewMode === 'login' ? 'register' : 'login');
     setError('');
     setSuccess('');
+    setVerificationEmail('');
     setFormData({ username: '', email: '', password: '', confirmPassword: '' });
   };
 
@@ -106,12 +123,28 @@ const Auth: React.FC = () => {
     setViewMode('login');
     setError('');
     setSuccess('');
+    setVerificationEmail('');
     setFormData({ username: '', email: '', password: '', confirmPassword: '' });
   };
 
   // If in forgot password mode, show the ForgotPassword component
   if (viewMode === 'forgot-password') {
     return <ForgotPassword onBackToLogin={handleBackToLogin} />;
+  }
+
+  // If in verify email mode, show the EmailVerification component
+  if (viewMode === 'verify-email') {
+    return (
+      <EmailVerification
+        email={verificationEmail}
+        onBackToLogin={handleBackToLogin}
+        onVerificationSuccess={() => {
+          // User will be automatically logged in after verification
+          setSuccess('Email verified successfully!');
+          setViewMode('login');
+        }}
+      />
+    );
   }
 
   const isLogin = viewMode === 'login';

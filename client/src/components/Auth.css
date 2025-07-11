@@ -566,4 +566,74 @@
   .forgot-password-link {
     font-size: 13px;
   }
+}
+
+/* Email Verification Styles */
+.otp-input {
+  text-align: center;
+  letter-spacing: 0.5em;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+.otp-input::placeholder {
+  letter-spacing: normal;
+  color: var(--text-tertiary);
+  font-weight: normal;
+}
+
+.resend-button {
+  background: transparent;
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.resend-button:hover:not(:disabled) {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.resend-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Verification Success Styles */
+.verification-success {
+  text-align: center;
+  padding: 20px;
+}
+
+.verification-success h2 {
+  color: var(--success-text);
+  margin-bottom: 8px;
+}
+
+.verification-success p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+  .otp-input {
+    font-size: 16px;
+    letter-spacing: 0.3em;
+  }
+  
+  .resend-button {
+    font-size: 13px;
+    padding: 10px 20px;
+  }
 } 

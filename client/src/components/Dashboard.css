@@ -973,3 +973,119 @@ html {
     font-size: 13px;
   }
 }
+
+/* Account Deletion Styles */
+.dropdown-item.danger {
+  color: var(--error-text);
+}
+
+.dropdown-item.danger:hover {
+  background: var(--error-bg);
+  color: var(--error-text);
+}
+
+.btn-danger {
+  background: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--error-text);
+  color: white;
+  border-color: var(--error-text);
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.warning-message {
+  background: var(--warning-bg, #fef3c7);
+  color: var(--warning-text, #92400e);
+  border: 1px solid var(--warning-border, #fcd34d);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.warning-message h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--warning-text, #92400e);
+}
+
+.warning-message p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--warning-text, #92400e);
+}
+
+.warning-message svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .warning-message {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+[data-theme="dark"] .warning-message h3,
+[data-theme="dark"] .warning-message p {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .dropdown-item.danger {
+  color: #ef4444;
+}
+
+[data-theme="dark"] .dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+[data-theme="dark"] .btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .btn-danger:hover:not(:disabled) {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+@media (max-width: 480px) {
+  .warning-message {
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .warning-message h3 {
+    font-size: 14px;
+  }
+  
+  .warning-message p {
+    font-size: 13px;
+  }
+}

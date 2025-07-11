@@ -192,7 +192,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 };
 
 const Dashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
   const { isDark, colors, toggleTheme } = useTheme();
 
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -202,12 +202,17 @@ const Dashboard: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [datePickerFor, setDatePickerFor] = useState<'add' | 'edit' | null>(null);
+  const [deleteAccountPassword, setDeleteAccountPassword] = useState('');
+  const [deleteAccountConfirm, setDeleteAccountConfirm] = useState('');
+  const [deleteAccountLoading, setDeleteAccountLoading] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState('');
 
   const [taskForm, setTaskForm] = useState({
     title: '',
@@ -410,6 +415,14 @@ const Dashboard: React.FC = () => {
     });
   };
 
+  const closeDeleteAccountModal = () => {
+    setShowDeleteAccountModal(false);
+    setDeleteAccountPassword('');
+    setDeleteAccountConfirm('');
+    setDeleteAccountError('');
+    setDeleteAccountLoading(false);
+  };
+
   const handleProfileMenuToggle = () => {
     setShowProfileMenu(!showProfileMenu);
   };
@@ -429,6 +442,35 @@ const Dashboard: React.FC = () => {
         { text: 'Logout', style: 'destructive', onPress: logout },
       ]
     );
+  };
+
+  const handleDeleteAccount = () => {
+    setShowProfileMenu(false);
+    setShowDeleteAccountModal(true);
+  };
+
+  const handleDeleteAccountSubmit = async () => {
+    if (!deleteAccountPassword || deleteAccountConfirm !== 'DELETE') {
+      setDeleteAccountError('Please enter your password and type "DELETE" to confirm');
+      return;
+    }
+
+    setDeleteAccountLoading(true);
+    setDeleteAccountError('');
+
+    try {
+      const result = await deleteAccount(deleteAccountPassword);
+      if (result.success) {
+        Alert.alert('Account Deleted', 'Your account has been successfully deleted.');
+        // User will be automatically logged out by the deleteAccount function
+      } else {
+        setDeleteAccountError(result.error || 'Failed to delete account');
+      }
+    } catch (error) {
+      setDeleteAccountError('Something went wrong. Please try again.');
+    } finally {
+      setDeleteAccountLoading(false);
+    }
   };
 
   const openDatePicker = (mode: 'add' | 'edit') => {
@@ -910,6 +952,42 @@ const Dashboard: React.FC = () => {
     modalButtonTextSecondary: {
       color: colors.text.primary,
     },
+    modalButtonDanger: {
+      backgroundColor: colors.status.error.text,
+    },
+    deleteAccountWarning: {
+      backgroundColor: colors.status.error.bg,
+      borderColor: colors.status.error.border,
+      borderWidth: 1,
+      borderRadius: 8,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 16,
+    },
+    deleteAccountWarningText: {
+      color: colors.status.error.text,
+      fontSize: 14,
+      flex: 1,
+      lineHeight: 20,
+    },
+    deleteAccountError: {
+      backgroundColor: colors.status.error.bg,
+      borderColor: colors.status.error.border,
+      borderWidth: 1,
+      borderRadius: 8,
+      padding: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 16,
+    },
+    deleteAccountErrorText: {
+      color: colors.status.error.text,
+      fontSize: 14,
+      flex: 1,
+    },
   });
 
   if (loading) {
@@ -973,6 +1051,13 @@ const Dashboard: React.FC = () => {
                   >
                     <Lock size={16} color={colors.text.secondary} />
                     <Text style={styles.profileMenuItemText}>Change Password</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.profileMenuItem}
+                    onPress={handleDeleteAccount}
+                  >
+                    <Trash2 size={16} color={colors.status.error.text} />
+                    <Text style={[styles.profileMenuItemText, styles.profileMenuItemLogout]}>Delete Account</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={[styles.profileMenuItem, styles.profileMenuItemLast]}
@@ -1329,6 +1414,99 @@ const Dashboard: React.FC = () => {
             setShowChangePasswordModal(false);
           }}
         />
+
+        {/* Delete Account Modal */}
+        <Modal
+          visible={showDeleteAccountModal}
+          transparent
+          animationType="fade"
+          onRequestClose={closeDeleteAccountModal}
+        >
+          <KeyboardAvoidingView
+            style={styles.modalOverlay}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Delete Account</Text>
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={closeDeleteAccountModal}
+                >
+                  <X size={24} color={colors.text.secondary} />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.modalForm}>
+                <View style={styles.deleteAccountWarning}>
+                  <AlertCircle size={24} color={colors.status.error.text} />
+                  <Text style={styles.deleteAccountWarningText}>
+                    This action cannot be undone. All your tasks and data will be permanently deleted.
+                  </Text>
+                </View>
+
+                {deleteAccountError && (
+                  <View style={styles.deleteAccountError}>
+                    <AlertCircle size={16} color={colors.status.error.text} />
+                    <Text style={styles.deleteAccountErrorText}>
+                      {deleteAccountError}
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.modalFormGroup}>
+                  <Text style={styles.modalLabel}>Enter your password to confirm</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="Enter your password"
+                    placeholderTextColor={colors.text.tertiary}
+                    value={deleteAccountPassword}
+                    onChangeText={setDeleteAccountPassword}
+                    secureTextEntry
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.modalFormGroup}>
+                  <Text style={styles.modalLabel}>Type "DELETE" to confirm</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="Type DELETE here"
+                    placeholderTextColor={colors.text.tertiary}
+                    value={deleteAccountConfirm}
+                    onChangeText={setDeleteAccountConfirm}
+                    autoCapitalize="characters"
+                  />
+                </View>
+              </View>
+              
+              <View style={styles.modalFooter}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonSecondary]}
+                  onPress={closeDeleteAccountModal}
+                >
+                  <Text style={[styles.modalButtonText, styles.modalButtonTextSecondary]}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonDanger]}
+                  onPress={handleDeleteAccountSubmit}
+                  disabled={deleteAccountLoading || !deleteAccountPassword || deleteAccountConfirm !== 'DELETE'}
+                >
+                  {deleteAccountLoading ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <Text style={[styles.modalButtonText, styles.modalButtonTextPrimary]}>
+                      Delete Account
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </Modal>
       </View>
     </SafeAreaView>
   );

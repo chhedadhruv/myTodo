@@ -29,6 +29,32 @@ const createTables = async () => {
       ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP;
     `);
 
+    // Add email verification columns
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE;
+    `);
+
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);
+    `);
+
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS verification_token_expires TIMESTAMP;
+    `);
+
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS verification_otp VARCHAR(6);
+    `);
+
+    await client.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS verification_otp_expires TIMESTAMP;
+    `);
+
     // Create tasks table
     await client.query(`
       CREATE TABLE IF NOT EXISTS tasks (
@@ -46,9 +72,18 @@ const createTables = async () => {
 
     // Create indexes for better performance
     await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+      CREATE INDEX IF NOT EXISTS idx_users_email_verified ON users(email_verified);
+      CREATE INDEX IF NOT EXISTS idx_users_verification_token ON users(verification_token);
+      CREATE INDEX IF NOT EXISTS idx_users_verification_otp ON users(verification_otp);
+      CREATE INDEX IF NOT EXISTS idx_users_reset_token ON users(reset_token);
       CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id);
       CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+      CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority);
       CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
+      CREATE INDEX IF NOT EXISTS idx_tasks_created_at ON tasks(created_at);
+      CREATE INDEX IF NOT EXISTS idx_tasks_updated_at ON tasks(updated_at);
     `);
 
     // Create function to update updated_at timestamp

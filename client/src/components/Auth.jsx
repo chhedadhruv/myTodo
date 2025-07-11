@@ -17,13 +17,14 @@ import {
 import './Auth.css';
 
 const Auth = () => {
-  const [authMode, setAuthMode] = useState('login'); // 'login', 'register', 'forgot-password', 'reset-password'
+  const [authMode, setAuthMode] = useState('login'); // 'login', 'register', 'forgot-password', 'reset-password', 'verify-email', 'verify-otp'
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [resetToken, setResetToken] = useState('');
+  const [verificationEmail, setVerificationEmail] = useState('');
   
   const [formData, setFormData] = useState({
     username: '',
@@ -31,21 +32,49 @@ const Auth = () => {
     password: '',
     confirmPassword: '',
     currentPassword: '',
-    newPassword: ''
+    newPassword: '',
+    otp: ''
   });
 
-  const { login, register, forgotPassword, resetPassword } = useAuth();
+  const { login, register, forgotPassword, resetPassword, verifyEmail, verifyOTP, resendVerification } = useAuth();
   const { theme, toggleTheme, isDark } = useTheme();
 
-  // Check for reset token in URL parameters
+  // Check for reset token or verification token in URL parameters
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
+    const isVerification = window.location.pathname.includes('verify-email');
+    
     if (token) {
-      setResetToken(token);
-      setAuthMode('reset-password');
+      if (isVerification) {
+        setResetToken(token);
+        setAuthMode('verify-email');
+        // Auto-verify if we have a verification token
+        const autoVerify = async () => {
+          setLoading(true);
+          try {
+            const result = await verifyEmail(token);
+            if (result.success) {
+              setSuccess(result.message);
+              setTimeout(() => {
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }, 2000);
+            } else {
+              setError(result.error);
+            }
+          } catch (err) {
+            setError('Email verification failed');
+          } finally {
+            setLoading(false);
+          }
+        };
+        autoVerify();
+      } else {
+        setResetToken(token);
+        setAuthMode('reset-password');
+      }
     }
-  }, []);
+  }, [verifyEmail]);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -71,7 +100,13 @@ const Auth = () => {
           if (result.success) {
             setSuccess('Login successful!');
           } else {
-            setError(result.error);
+            if (result.requiresVerification) {
+              setError(result.error);
+              setVerificationEmail(result.email);
+              setAuthMode('verify-otp');
+            } else {
+              setError(result.error);
+            }
           }
           break;
           
@@ -84,7 +119,13 @@ const Auth = () => {
           }
           result = await register(formData.username, formData.email, formData.password);
           if (result.success) {
-            setSuccess('Registration successful!');
+            if (result.requiresVerification) {
+              setSuccess(result.message);
+              setVerificationEmail(result.email);
+              setAuthMode('verify-otp');
+            } else {
+              setSuccess('Registration successful!');
+            }
           } else {
             setError(result.error);
           }
@@ -120,9 +161,38 @@ const Auth = () => {
                 password: '',
                 confirmPassword: '',
                 currentPassword: '',
-                newPassword: ''
+                newPassword: '',
+                otp: ''
               });
             }, 2000);
+          } else {
+            setError(result.error);
+          }
+          break;
+          
+        case 'verify-email':
+          result = await verifyEmail(resetToken);
+          if (result.success) {
+            setSuccess(result.message);
+            // Redirect to dashboard after successful verification
+            setTimeout(() => {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }, 2000);
+          } else {
+            setError(result.error);
+          }
+          break;
+          
+        case 'verify-otp':
+          if (!formData.otp || formData.otp.length !== 6) {
+            setError('Please enter a valid 6-digit OTP');
+            setLoading(false);
+            return;
+          }
+          result = await verifyOTP(verificationEmail, formData.otp);
+          if (result.success) {
+            setSuccess(result.message);
+            // User will be logged in after successful verification
           } else {
             setError(result.error);
           }
@@ -148,7 +218,8 @@ const Auth = () => {
       password: '', 
       confirmPassword: '', 
       currentPassword: '', 
-      newPassword: '' 
+      newPassword: '',
+      otp: '' 
     });
   };
 
@@ -181,6 +252,16 @@ const Auth = () => {
           title: 'Reset your password',
           subtitle: 'Enter your new password below'
         };
+      case 'verify-email':
+        return {
+          title: 'Verify your email',
+          subtitle: 'Click the link in your email to verify your account'
+        };
+      case 'verify-otp':
+        return {
+          title: 'Verify your email',
+          subtitle: `Enter the 6-digit code sent to ${verificationEmail}`
+        };
       default:
         return {
           title: 'Welcome',
@@ -202,7 +283,7 @@ const Auth = () => {
           <div className="auth-icon">
             <CheckCircle size={32} />
           </div>
-          {(authMode === 'forgot-password' || authMode === 'reset-password') && (
+          {(authMode === 'forgot-password' || authMode === 'reset-password' || authMode === 'verify-email' || authMode === 'verify-otp') && (
             <button 
               className="back-button"
               onClick={() => switchAuthMode('login')}
@@ -338,6 +419,30 @@ const Auth = () => {
             </div>
           )}
 
+          {/* OTP field - for email verification */}
+          {authMode === 'verify-otp' && (
+            <div className="form-group">
+              <label className="form-label">Verification Code</label>
+              <div className="input-wrapper">
+                <Mail size={20} className="input-icon" />
+                <input
+                  type="text"
+                  name="otp"
+                  placeholder="Enter 6-digit code"
+                  value={formData.otp}
+                  onChange={handleInputChange}
+                  required
+                  className="form-input otp-input"
+                  maxLength="6"
+                  pattern="[0-9]{6}"
+                />
+                {formData.otp && formData.otp.length === 6 && (
+                  <Check size={20} className="input-validation success" />
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Forgot Password link - only show on login */}
           {authMode === 'login' && (
             <div className="form-group">
@@ -364,9 +469,38 @@ const Auth = () => {
                 {authMode === 'register' && 'Create account'}
                 {authMode === 'forgot-password' && 'Send reset link'}
                 {authMode === 'reset-password' && 'Reset password'}
+                {authMode === 'verify-email' && 'Verify email'}
+                {authMode === 'verify-otp' && 'Verify code'}
               </>
             )}
           </button>
+
+          {/* Resend verification button - only show on verify-otp mode */}
+          {authMode === 'verify-otp' && (
+            <button
+              type="button"
+              onClick={async () => {
+                setLoading(true);
+                try {
+                  const result = await resendVerification(verificationEmail);
+                  if (result.success) {
+                    setSuccess(result.message);
+                    setError('');
+                  } else {
+                    setError(result.error);
+                  }
+                } catch (err) {
+                  setError('Failed to resend verification code');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              className="resend-button"
+            >
+              Resend code
+            </button>
+          )}
         </form>
 
         {/* Auth switch section - only show for login/register modes */}
