@@ -615,7 +615,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **React Native Team** for cross-platform development
 - **Vite Team** for the incredible build tool
 - **Express.js Team** for the robust web framework
-- **Open Source Community** for inspiration and contributions
 - **Tailscale** for secure, private networking
 
 ---
@@ -631,5 +630,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 **Happy task managing! 🎯**
-
 </div> 
