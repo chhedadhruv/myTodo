@@ -8,6 +8,25 @@ const router = express.Router();
 // All task routes require authentication
 router.use(authenticateToken);
 
+// Utility function to convert local datetime to UTC
+const convertToUTC = (localDateTime) => {
+  if (!localDateTime) return null;
+  
+  // Create a date object from the local datetime string
+  const localDate = new Date(localDateTime);
+  
+  // Convert to UTC ISO string
+  return localDate.toISOString();
+};
+
+// Utility function to format date for display (keeps UTC but formats nicely)
+const formatDateForDisplay = (utcDateString) => {
+  if (!utcDateString) return null;
+  
+  // Return the UTC date as is - let the client handle timezone conversion
+  return utcDateString;
+};
+
 // Get all tasks with filtering
 router.get('/', [
   query('status').optional().isIn(['all', 'active', 'completed']),
@@ -126,9 +145,12 @@ router.post('/', [
 
     const { title, description, priority = 'medium', due_date } = req.body;
 
+    // Convert the date to UTC for storage
+    const utcDate = convertToUTC(due_date);
+
     const result = await pool.query(
       'INSERT INTO tasks (user_id, title, description, priority, due_date) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [req.user.id, title, description, priority, due_date]
+      [req.user.id, title, description, priority, utcDate]
     );
 
     res.status(201).json({
@@ -207,8 +229,10 @@ router.put('/:id', [
 
     if (due_date !== undefined) {
       paramCount++;
+      // Convert the date to UTC for storage
+      const utcDate = convertToUTC(due_date);
       updates.push(`due_date = $${paramCount}`);
-      values.push(due_date);
+      values.push(utcDate);
     }
 
     if (updates.length === 0) {

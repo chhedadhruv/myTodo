@@ -11,11 +11,16 @@ const pool = new Pool({
   database: process.env.DB_NAME || 'mytodo',
   password: process.env.DB_PASSWORD || 'password',
   port: process.env.DB_PORT || 5432,
+  // Set timezone to UTC for consistent time handling
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
-// Test connection
-pool.on('connect', () => {
+// Test connection and set timezone
+pool.on('connect', (client) => {
   console.log('Connected to PostgreSQL database');
+  // Set timezone to UTC for this connection
+  client.query('SET timezone = \'UTC\';');
 });
 
 pool.on('error', (err) => {

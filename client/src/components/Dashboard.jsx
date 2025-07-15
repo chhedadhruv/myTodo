@@ -192,11 +192,15 @@ const Dashboard = () => {
     if (!taskForm.title.trim() || !taskForm.due_date) return;
     
     try {
+      // Convert local datetime to UTC ISO string for consistency with mobile app
+      const localDate = new Date(taskForm.due_date);
+      const utcDate = localDate.toISOString();
+      
       await createTask({
         title: taskForm.title,
         description: taskForm.description,
         priority: taskForm.priority,
-        due_date: taskForm.due_date
+        due_date: utcDate
       });
       
       setTaskForm({ title: '', description: '', priority: 'medium', due_date: '' });
@@ -211,11 +215,15 @@ const Dashboard = () => {
     if (!taskForm.title.trim() || !taskForm.due_date) return;
     
     try {
+      // Convert local datetime to UTC ISO string for consistency with mobile app
+      const localDate = new Date(taskForm.due_date);
+      const utcDate = localDate.toISOString();
+      
       await updateTask(editingTask.id, {
         title: taskForm.title,
         description: taskForm.description,
         priority: taskForm.priority,
-        due_date: taskForm.due_date
+        due_date: utcDate
       });
       
       setTaskForm({ title: '', description: '', priority: 'medium', due_date: '' });
@@ -239,11 +247,25 @@ const Dashboard = () => {
 
   const openEditModal = (task) => {
     setEditingTask(task);
+    
+    // Convert UTC date back to local datetime-local format
+    let localDateTime = '';
+    if (task.due_date) {
+      const utcDate = new Date(task.due_date);
+      // Format as YYYY-MM-DDTHH:MM for datetime-local input
+      const year = utcDate.getFullYear();
+      const month = String(utcDate.getMonth() + 1).padStart(2, '0');
+      const day = String(utcDate.getDate()).padStart(2, '0');
+      const hours = String(utcDate.getHours()).padStart(2, '0');
+      const minutes = String(utcDate.getMinutes()).padStart(2, '0');
+      localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    
     setTaskForm({
       title: task.title,
       description: task.description || '',
       priority: task.priority,
-      due_date: task.due_date ? task.due_date.slice(0, 16) : ''
+      due_date: localDateTime
     });
     setShowEditModal(true);
   };
@@ -356,28 +378,21 @@ const Dashboard = () => {
 
   const isTaskOverdue = (dueDate) => {
     if (!dueDate) return false;
-    return new Date(dueDate) < new Date();
+    // Compare UTC dates to avoid timezone issues
+    const taskDate = new Date(dueDate);
+    const now = new Date();
+    return taskDate < now;
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return '';
     const date = new Date(dateString);
-    const now = new Date();
-    
-    // Check if it's today
-    if (date.toDateString() === now.toDateString()) {
-      return `Today at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-    
-    // Check if it's tomorrow
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (date.toDateString() === tomorrow.toDateString()) {
-      return `Tomorrow at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-    
-    // Otherwise show full date and time
-    return date.toLocaleDateString() + ' at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   // Close dropdown when clicking outside
