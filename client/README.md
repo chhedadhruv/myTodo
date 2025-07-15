@@ -1,13 +1,18 @@
-# 📋 MyTodo - Modern Task Management
-
 <div align="center">
-  <h3>🎯 Organize Your Tasks, Amplify Your Productivity</h3>
-  <p>A modern, intuitive task management web application built with React and powered by cutting-edge technologies.</p>
-  
-  ![React](https://img.shields.io/badge/React-19.1.0-blue?style=for-the-badge&logo=react)
-  ![Vite](https://img.shields.io/badge/Vite-7.0.3-646CFF?style=for-the-badge&logo=vite)
-  ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow?style=for-the-badge&logo=javascript)
-  ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+
+# 🌐 MyTodo Web Client
+
+**A modern, responsive web application for task management**
+
+[![React](https://img.shields.io/badge/React-19.1.0-blue?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-7.0.3-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+
+*Organize your tasks with a beautiful, modern web interface*
+
+[Features](#-features) • [Quick Start](#-quick-start) • [Development](#-development) • [Deployment](#-deployment)
+
 </div>
 
 ---
@@ -42,23 +47,7 @@
 
 ---
 
-## 🖼️ Screenshots
 
-> *Screenshots showcase the application's clean interface and feature set*
-
-<details>
-<summary>Click to view screenshots</summary>
-
-```
-📱 Coming Soon: Add screenshots here
-- Login/Register screens
-- Dashboard with tasks
-- Task creation modal
-- Dark/Light theme comparison
-- Mobile responsive views
-```
-
-</details>
 
 ---
 
@@ -81,39 +70,42 @@
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- **Node.js** (v16 or higher)
-- **npm** or **yarn**
+### **Prerequisites**
+- **Node.js** 18 or higher
+- **Yarn** or **npm**
 - **Git**
 
-### Installation
+### **1. Clone the Repository**
+```bash
+git clone https://github.com/chhedadhruv/myTodo.git
+cd myTodo/client
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/chhedadhruv/myTodo.git
-   cd myTodo/client
-   ```
+### **2. Install Dependencies**
+```bash
+# Using yarn
+yarn install
 
-2. **Install dependencies**
-   ```bash
-   # Using npm
-   npm install
-   
-   # Using yarn
-   yarn install
-   ```
+# Using npm
+npm install
+```
 
-3. **Start the development server**
-   ```bash
-   # Using npm
-   npm run dev
-   
-   # Using yarn
-   yarn dev
-   ```
+### **3. Configure API Connection**
+Create a `.env` file in the root directory:
+```env
+VITE_API_BASE_URL=http://localhost:5000/api
+```
 
-4. **Open your browser**
-   Navigate to `http://localhost:5173`
+### **4. Start Development**
+```bash
+# Using yarn
+yarn dev
+
+# Using npm
+npm run dev
+```
+
+🎉 **Web Client running at** `http://localhost:5173`
 
 ### 🔧 Available Scripts
 
@@ -154,7 +146,17 @@
 
 ## 🔌 API Integration
 
-The application connects to a REST API backend. Make sure your backend server is running on `http://localhost:3001` or update the API base URL in the code.
+The web client connects to the MyTodo REST API backend. Ensure your API server is running and accessible.
+
+### **API Configuration**
+Update the API base URL in your `.env` file:
+```env
+# Development
+VITE_API_BASE_URL=http://localhost:5000/api
+
+# Production
+VITE_API_BASE_URL=https://your-api.com/api
+```
 
 ### **Required API Endpoints**
 - `POST /api/auth/login` - User authentication
@@ -164,6 +166,8 @@ The application connects to a REST API backend. Make sure your backend server is
 - `PUT /api/tasks/:id` - Update task
 - `DELETE /api/tasks/:id` - Delete task
 - `PATCH /api/tasks/:id/toggle` - Toggle task status
+
+> **📖 Full API Documentation**: See [server/README.md](../server/README.md) for complete API details.
 
 ---
 
@@ -188,35 +192,91 @@ src/
 ### **Environment Configuration**
 Create a `.env` file in the root directory:
 ```env
-VITE_API_BASE_URL=http://localhost:3001/api
+VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
-### **Contributing**
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+---
+
+## 🚀 Deployment
+
+### **🌐 Static Hosting Deployment**
+
+The web client is designed to be deployed as a static application to various hosting platforms.
+
+#### **Build for Production**
+```bash
+# Create production build
+yarn build
+# or
+npm run build
+
+# Preview production build locally
+yarn preview
+# or
+npm run preview
+```
+
+#### **Deploy to Platforms**
+- **Vercel**: Connect your GitHub repository for automatic deployments
+- **Netlify**: Drag and drop the `dist` folder or connect via Git
+- **GitHub Pages**: Use GitHub Actions for automated deployment
+- **Cloudflare Pages**: Connect repository for automatic builds
+
+### **🔧 Production Configuration**
+
+Before deploying:
+
+1. **Update API URL** to point to your production server
+2. **Configure Environment Variables** for production
+3. **Test the Build** locally with `yarn preview`
+4. **Set up Custom Domain** (optional)
+5. **Configure SSL/TLS** (usually automatic with modern platforms)
+
+### **🌐 API Server Requirements**
+
+Ensure your API server is deployed and accessible:
+- **Production API URL** configured in the app
+- **SSL/TLS** enabled for secure communication
+- **CORS** configured to allow web client requests
+- **Rate Limiting** and security measures in place
+
+> **📖 API Documentation**: See [server/README.md](../server/README.md) for complete API setup and deployment details.
 
 ---
 
-## 📱 Mobile App
+## 🤝 Contributing
 
-This project also includes a React Native mobile application! Check out the `mobile/` directory for the companion mobile app.
+We welcome contributions! Please follow these steps:
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Make** your changes
+4. **Test** your changes thoroughly
+5. **Commit** your changes: `git commit -m 'Add amazing feature'`
+6. **Push** to the branch: `git push origin feature/amazing-feature`
+7. **Open** a Pull Request
+
+### **Development Guidelines**
+- Follow existing code style and patterns
+- Add tests for new functionality
+- Update documentation for API changes
+- Use conventional commit messages
+- Ensure all tests pass before submitting
 
 ---
 
-## 🤝 Support
+## 👨‍💻 Author
 
-- **Issues**: [GitHub Issues](https://github.com/chhedadhruv/myTodo/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/chhedadhruv/myTodo/discussions)
+**Dhruv Chheda**
+
 - **Email**: me@dhruvchheda.com
+- **GitHub**: [@chhedadhruv](https://github.com/chhedadhruv)
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
@@ -229,7 +289,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## 🔗 Related Projects
+
+**MyTodo Ecosystem**
+
+**Web Client** (You are here) • [Mobile App](../mobile) • [API Server](../server)
+
+---
+
 <div align="center">
-  <h3>🌟 Star this repository if you found it helpful!</h3>
-  <p>Built with ❤️ by [Your Name]</p>
+
+### 🌟 Star this repository if you found it helpful!
+
+**Built with ❤️ using React & Vite**
+
+*Happy task managing! 🎯*
+
 </div>

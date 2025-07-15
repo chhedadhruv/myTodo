@@ -8,10 +8,11 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0.4-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![iOS](https://img.shields.io/badge/iOS-Supported-black?style=for-the-badge&logo=ios)](https://developer.apple.com/ios/)
 [![Android](https://img.shields.io/badge/Android-Supported-green?style=for-the-badge&logo=android)](https://developer.android.com/)
+[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 *Your productivity companion, now in your pocket*
 
-[Features](#-features) • [Screenshots](#-screenshots) • [Installation](#-installation) • [Usage](#-usage) • [Development](#-development)
+[Features](#-features) • [Quick Start](#-quick-start) • [Development](#-development) • [Deployment](#-deployment)
 
 </div>
 
@@ -94,34 +95,42 @@
 
 ---
 
-## 🚀 Installation
+## 🚀 Quick Start
 
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- **Node.js** (v18 or higher) - [Download](https://nodejs.org/)
+### **Prerequisites**
+- **Node.js** 18 or higher
 - **React Native CLI** - `npm install -g @react-native-community/cli`
 - **Xcode** (for iOS development) - [Mac App Store](https://apps.apple.com/app/xcode/id497799835)
 - **Android Studio** (for Android development) - [Download](https://developer.android.com/studio)
 - **CocoaPods** (for iOS) - `sudo gem install cocoapods`
 
-### 📥 Quick Setup
-
+### **1. Clone the Repository**
 ```bash
-# 1. Clone the repository
-git clone <your-repository-url>
+git clone https://github.com/chhedadhruv/myTodo.git
 cd myTodo/mobile
+```
 
-# 2. Install dependencies
+### **2. Install Dependencies**
+```bash
+# Install dependencies
 yarn install
 # or
 npm install
 
-# 3. iOS Setup (Mac only)
+# iOS Setup (Mac only)
 cd ios && pod install && cd ..
+```
 
-# 4. Start Metro bundler
+### **3. Configure API Connection**
+Update the API base URL in your components or create a config file:
+```typescript
+const API_BASE_URL = 'http://localhost:5000/api'; // Development
+const API_BASE_URL = 'https://your-api.com/api'; // Production
+```
+
+### **4. Start Development**
+```bash
+# Start Metro bundler
 yarn start
 # or
 npm start
@@ -216,21 +225,13 @@ src/
 | `yarn test` | Run Jest tests |
 | `yarn lint` | Run ESLint |
 
-### **Configuration**
+### **Environment Configuration**
 
-#### **API Configuration**
-Update the API base URL in your components or create a config file:
-```typescript
-const API_BASE_URL = 'http://localhost:5000/api'; // Development
-const API_BASE_URL = 'https://your-api.com/api'; // Production
-```
-
-#### **Environment Setup**
 For different environments, you can create configuration files:
 ```typescript
 // config/environment.ts
 export const config = {
-  apiUrl: __DEV__ ? 'http://localhost:5000/api' : 'https://api.mytodo.app',
+  apiUrl: __DEV__ ? 'http://localhost:5000/api' : 'https://your-api.com/api',
   enableLogging: __DEV__,
 };
 ```
@@ -335,9 +336,13 @@ yarn test Auth.test.tsx
 
 ---
 
-## 📱 Building for Production
+## 🚀 Deployment
 
-### **iOS Release Build**
+### **📱 App Store Deployment**
+
+The mobile app is designed to be deployed to the official app stores for distribution.
+
+#### **iOS App Store**
 ```bash
 # 1. Archive in Xcode
 # 2. Upload to App Store Connect
@@ -347,7 +352,7 @@ yarn test Auth.test.tsx
 npx react-native run-ios --configuration Release
 ```
 
-### **Android Release Build**
+#### **Android Play Store**
 ```bash
 # Generate signed APK
 cd android
@@ -356,6 +361,26 @@ cd android
 # Generate signed AAB (recommended for Play Store)
 ./gradlew bundleRelease
 ```
+
+### **🔧 Production Configuration**
+
+Before deploying to app stores:
+
+1. **Update API Configuration** to point to your production server
+2. **Configure App Icons** and splash screens
+3. **Set up Code Signing** for both platforms
+4. **Test on Physical Devices** before submission
+5. **Configure App Store Metadata** (descriptions, screenshots, etc.)
+
+### **🌐 API Server Requirements**
+
+Ensure your API server is deployed and accessible:
+- **Production API URL** configured in the app
+- **SSL/TLS** enabled for secure communication
+- **CORS** configured to allow mobile app requests
+- **Rate Limiting** and security measures in place
+
+> **📖 API Documentation**: See [server/README.md](../server/README.md) for complete API setup and deployment details.
 
 ---
 
@@ -381,22 +406,34 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🔗 Related Projects
+## 👨‍💻 Author
 
-- **[MyTodo Web App](../client/)** - React web application
-- **[MyTodo Server](../server/)** - Node.js REST API backend
+**Dhruv Chheda**
+
+- **Email**: me@dhruvchheda.com
+- **GitHub**: [@chhedadhruv](https://github.com/chhedadhruv)
 
 ---
 
-## 📞 Support
+## 🙏 Acknowledgments
 
-- **📧 Email**: [your-email@example.com](mailto:your-email@example.com)
-- **🐛 Issues**: [GitHub Issues](https://github.com/your-username/myTodo/issues)
-- **💬 Discussions**: [GitHub Discussions](https://github.com/your-username/myTodo/discussions)
+- **React Native Team** for cross-platform mobile development
+- **TypeScript Team** for type safety and better development experience
+- **React Team** for the amazing framework
+
+---
+
+## 🔗 Related Projects
+
+**MyTodo Ecosystem**
+
+[Web Client](../client) • **Mobile App** (You are here) • [API Server](../server)
 
 ---
 
 <div align="center">
+
+### 🌟 Star this repository if you found it helpful!
 
 **Built with ❤️ using React Native**
 

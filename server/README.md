@@ -679,33 +679,111 @@ CORS_ORIGIN=https://yourdomain.com,https://app.yourdomain.com
 
 ## 🚀 Production Deployment
 
-### 🏠 Homeserver Deployment
+### 🐳 Docker & Nginx Deployment
+
+The project includes a complete Docker setup with Nginx reverse proxy for production deployment.
 
 ```bash
-# 1. Clone to your homeserver
-git clone <repository-url>
+# Navigate to server directory
 cd server
 
-# 2. Configure production environment
-cp .env.example .env
-# Edit .env with production values
+# Build and start all services with Docker Compose
+docker-compose up -d --build
 
-# 3. Deploy with Docker Compose
-docker-compose up -d
+# Check status of all services
+docker-compose ps
 
-# 4. Verify deployment
-curl http://your-server-ip:5000/api/health
+# View logs for specific service
+docker-compose logs -f app      # API server logs
+docker-compose logs -f nginx    # Nginx logs
+docker-compose logs -f postgres # Database logs
+
+# Stop all services
+docker-compose down
+
+# Rebuild and restart
+docker-compose up -d --build --force-recreate
 ```
+
+**Docker Services:**
+- **`app`** - Node.js API server (port 5000)
+- **`postgres`** - PostgreSQL database (port 5432)
+- **`nginx`** - Reverse proxy and SSL termination (port 80/443)
+- **`redis`** - Optional caching layer (port 6379)
+
+**Nginx Configuration:**
+- SSL/TLS termination with automatic certificate management
+- Reverse proxy to Node.js application
+- Static file serving for optimized performance
+- Security headers and rate limiting
+- Gzip compression for faster responses
+
+### ☁️ Cloud Platform Deployment
+
+For cloud platform deployment (VPS, managed container service, etc.):
+
+1. **Deploy API Server** to your preferred cloud platform
+2. **Set up PostgreSQL** database (managed service recommended)
+3. **Configure environment variables**
+4. **Set up Nginx** for reverse proxy and SSL termination
+5. **Configure monitoring** and health checks
+
+**Recommended Cloud Setup:**
+- **API Server**: Deploy with Docker on your cloud platform
+- **Database**: Use managed PostgreSQL service or connect securely via Tailscale
+- **SSL/TLS**: Configure with Let's Encrypt or cloud provider
+- **Domain**: Set up custom domain with DNS
+- **Tailscale**: Use for secure, private networking between services (optional)
+
+### 🔧 Docker Configuration
+
+<details>
+<summary><strong>Production Docker Environment</strong></summary>
+
+Create a `.env` file for Docker Compose:
+
+```bash
+# Database Configuration
+DB_PASSWORD=your_secure_database_password
+POSTGRES_DB=mytodo
+POSTGRES_USER=postgres
+
+# JWT Secrets (Use strong, unique secrets in production!)
+JWT_SECRET=your-production-jwt-secret-minimum-32-characters
+JWT_REFRESH_SECRET=your-production-refresh-secret-minimum-32-characters
+
+# Email Configuration
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# CORS Configuration
+CORS_ORIGIN=https://yourdomain.com,https://app.yourdomain.com
+
+# Nginx Configuration
+NGINX_HOST=yourdomain.com
+NGINX_SSL_EMAIL=your-email@domain.com
+```
+
+**Docker Compose Features:**
+- **Multi-stage builds** for optimized images
+- **Volume persistence** for database and logs
+- **Health checks** for all services
+- **Automatic restarts** on failure
+- **Network isolation** for security
+
+</details>
 
 ### ☁️ Cloud Deployment Checklist
 
 - [ ] **Environment Variables**: Set all required env vars
-- [ ] **Database**: Use managed PostgreSQL service
+- [ ] **Database**: Use managed PostgreSQL service (consider Tailscale for secure access)
 - [ ] **SSL/TLS**: Configure HTTPS with valid certificates
 - [ ] **Domain**: Set up custom domain with DNS
 - [ ] **Monitoring**: Configure logging and alerting
 - [ ] **Backups**: Set up automated database backups
-- [ ] **Scaling**: Configure auto-scaling if needed
+- [ ] **Nginx**: Reverse proxy and SSL termination configured
+- [ ] **Docker**: All services running and healthy
+- [ ] **Tailscale**: Secure private networking enabled (optional but recommended)
 
 ### 🔧 Nginx Configuration
 
@@ -790,6 +868,21 @@ pool.query('SELECT NOW()', (err, res) => {
 - Verify SMTP credentials
 - Check if less secure app access is enabled (Gmail)
 - Test email configuration with a simple send
+
+### Tailscale Issues
+```bash
+# Check Tailscale status
+tailscale status
+
+# Restart Tailscale service
+sudo tailscale up
+
+# Check your node's IP and connectivity
+tailscale ip -4
+tailscale ping <other-node>
+
+# For database or admin access, ensure both nodes are in the same Tailscale network
+```
 
 </details>
 
@@ -888,6 +981,16 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
+## 🙏 Acknowledgments
+
+- **Express.js Team** for the robust web framework
+- **PostgreSQL Team** for the reliable database
+- **Docker Team** for containerization technology
+- **Nginx Team** for the high-performance web server
+- **Tailscale** for secure, private networking
+
+---
+
 <div align="center">
 
 ### 🌟 Related Projects
@@ -899,7 +1002,5 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ---
 
 **⭐ Star this repository if you found it helpful!**
-
-[Report Bug](../../issues) • [Request Feature](../../issues) • [Documentation](../../wiki)
 
 </div> 
