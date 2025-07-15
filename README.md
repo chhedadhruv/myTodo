@@ -632,6 +632,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Happy task managing! 🎯**
 
-[Report Bug](../../issues) • [Request Feature](../../issues) • [Documentation](../../wiki)
-
 </div> 
